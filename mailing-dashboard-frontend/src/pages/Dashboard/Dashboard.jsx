@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Menu } from "lucide-react";
 
 const Dashboard = () => {
     const [emails, setEmails] = useState([]);
     const [selectedEmail, setSelectedEmail] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState("Inbox");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
@@ -50,14 +52,25 @@ const Dashboard = () => {
 
     const handleFolderClick = (folderName) => {
         setSelectedFolder(folderName);
-        setSelectedEmail(null);
+        setSelectedEmail(null); // Clear selected email
+        setIsSidebarOpen(false); // Close sidebar on folder click
     };
 
     const filteredEmails = emails.filter((email) => email.folder === selectedFolder);
 
     return (
         <div className="flex h-screen">
-            <div className="w-64 bg-gray-100 p-4">
+            <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="fixed top-4 left-4 p-2 bg-gray-200 rounded-lg md:hidden z-50"
+            >
+                <Menu className="w-6 h-6" />
+            </button>
+
+            <div
+                className={`fixed md:relative w-64 bg-gray-100 p-4 h-screen transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    } md:translate-x-0 z-40 mt-[3rem] md:mt-0`}
+            >
                 <h2 className="font-bold mb-4">Folders</h2>
                 <ul>
                     {folders.map((folder) => (
@@ -81,42 +94,38 @@ const Dashboard = () => {
                 </button>
             </div>
 
-            <div className="flex-1 p-4">
-                <div className="flex">
-                    <div className="w-1/3 border-r p-4">
-                        <h2 className="font-bold mb-4">Inbox</h2>
-                        {filteredEmails.length > 0 ? (
-                            <ul>
-                                {filteredEmails.map((email) => (
-                                    <li
-                                        key={email.id}
-                                        onClick={() => handleEmailClick(email.id)}
-                                        className="cursor-pointer hover:bg-gray-100 p-2 rounded"
-                                    >
-                                        <div className="font-bold">{email.subject}</div>
-                                        <div className="text-sm text-gray-500">{email.sender}</div>
-                                        <div className="text-xs text-gray-400">{email.timestamp}</div>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No {selectedFolder.toLowerCase()} available</p>
-                        )}
-                    </div>
+            <div className="flex-1 mt-[3rem] md:mt-0 p-4 overflow-y-auto">
+                <h2 className="font-bold mb-4 text-xl md:hidden">{selectedFolder}</h2>
 
-                    <div className="w-2/3 p-4">
-                        {selectedEmail ? (
-                            <div>
-                                <h2 className="font-bold text-xl">{selectedEmail.subject}</h2>
-                                <div className="text-sm text-gray-500">{selectedEmail.sender}</div>
-                                <div className="text-xs text-gray-400">{selectedEmail.timestamp}</div>
-                                <p className="mt-4">{selectedEmail.content}</p>
-                            </div>
-                        ) : (
-                            <p>Select an email to view</p>
-                        )}
-                    </div>
+                <div className="w-full md:w-1/3 border-r p-0 md:p-4">
+                    <h2 className="font-bold mb-4 hidden md:block">Inbox</h2>
+                    {filteredEmails.length > 0 ? (
+                        <ul>
+                            {filteredEmails.map((email) => (
+                                <li
+                                    key={email.id}
+                                    onClick={() => handleEmailClick(email.id)}
+                                    className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+                                >
+                                    <div className="font-bold">{email.subject}</div>
+                                    <div className="text-sm text-gray-500">{email.sender}</div>
+                                    <div className="text-xs text-gray-400">{email.timestamp}</div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No {selectedFolder.toLowerCase()} available</p>
+                    )}
                 </div>
+
+                {selectedEmail && (
+                    <div className="w-full md:w-2/3 p-4">
+                        <h2 className="font-bold text-xl">{selectedEmail.subject}</h2>
+                        <div className="text-sm text-gray-500">{selectedEmail.sender}</div>
+                        <div className="text-xs text-gray-400">{selectedEmail.timestamp}</div>
+                        <p className="mt-4">{selectedEmail.content}</p>
+                    </div>
+                )}
             </div>
         </div>
     );
