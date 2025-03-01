@@ -10,10 +10,8 @@ const signUp = async (req, res) => {
     return res.status(400).json({ message: "User already exists" });
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user
   const user = { email, password: hashedPassword };
   createUser(user);
 
@@ -23,19 +21,16 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
   const { email, password } = req.body;
 
-  // Find user
   const user = findUserByEmail(email);
   if (!user) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  // Validate password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  // Generate JWT
   const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
